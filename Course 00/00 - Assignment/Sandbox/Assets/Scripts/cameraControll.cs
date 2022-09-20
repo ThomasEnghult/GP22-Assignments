@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class cameraControll : MonoBehaviour
 {
-    float posX = 0f;
+    float posX, posY = 0f;
 
     // Start is called before the first frame update
     void Start()
@@ -19,6 +19,7 @@ public class cameraControll : MonoBehaviour
         if (player != null)
         {
             posX = player.transform.position.x;
+            //posY = player.transform.position.y;
         }
         //transform.position = player.transform.position + new Vector3(0,0,-10 * size);
         transform.position = new Vector3(posX, 0,-10);

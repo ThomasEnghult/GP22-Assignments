@@ -220,6 +220,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1bfbd8aa60935db4a980f3ec1cbbd4d2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  existingCircle: 0
   keepVelocity: 0
   mouseGravity: 1
   drag: 0

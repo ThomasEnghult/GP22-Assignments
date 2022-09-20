@@ -37,10 +37,14 @@ public class PlayerMovement2D : MonoBehaviour
         jumping = false;
     }
 
-    private void OnTriggerEnter2D(Collider2D other)
+    private void OnTriggerStay2D(Collider2D collision)
     {
         grounded = true;
         Debug.Log("Grounded");
+    }
+    private void OnTriggerEnter2D(Collider2D other)
+    {
+        
         if (other.gameObject.CompareTag("Deadly"))
         {
             respawn();
