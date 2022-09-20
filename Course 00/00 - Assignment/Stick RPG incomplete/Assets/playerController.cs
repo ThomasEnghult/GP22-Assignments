@@ -4,62 +4,121 @@ using UnityEngine;
 
 public class playerController : MonoBehaviour
 {
-    public float xMove, yMove;
     public float movementspeed = 5;
-    public float sprint = 2;
+    public float sprintSpeed = 1.5f;
+    public float skateBaseSpeed = 1.5f;
+    public float skateSprintSpeed = 2;
+
+    float xMove, yMove;
+    
+    //For moving the arms
+    public float armRotationSpeed;
+    float x, y, z;
+
     public Transform elbow_left, elbow_right;
+    public GameObject skateboard;
+    AudioSource walkSound;
+    bool isPlayingWalkSound = false;
+
     Vector3 currentEulerAngles;
-    public float rotationSpeed;
-    public float x, y, z;
+    float skateSprint;
 
     // Start is called before the first frame update
     void Start()
     {
+        walkSound = GetComponent<AudioSource>();
+
         currentEulerAngles = elbow_left.localEulerAngles;
         // rotation of arms
         x = 360;
-        rotationSpeed = 0.2f;
+        armRotationSpeed = 0.2f;
     }
 
     // Update is called once per frame
     void Update()
     {
-        //Get movement input
-        xMove = Input.GetAxis("Horizontal");
-        yMove = Input.GetAxis("Vertical");
+        //Move with arrow/WASD keys
+        xMove = Input.GetAxisRaw("Horizontal");
+        yMove = Input.GetAxisRaw("Vertical");
 
+        //Move with mouse
         if (Input.GetMouseButton(0))
         {
             Vector3 aim = Camera.main.ScreenToWorldPoint(Input.mousePosition) - transform.position;
-            aim = aim.normalized;
             xMove = aim.x;
             yMove = aim.y;
         }
 
+        //Sets the flags to tell what the player is doing
+        bool isMoving = yMove != 0 || xMove != 0;
+        bool isSkateboarding = Input.GetButton("Jump");
+        bool isSprinting = Input.GetKey(KeyCode.LeftShift);
+
         //Set movespeed
         float movement = movementspeed * Time.deltaTime;
 
-        //If sprinting
-        if (Input.GetKey(KeyCode.LeftShift))
+        //Move faster if sprinting
+        if (isSprinting && !isSkateboarding)
         {
-            movement = movement * sprint;
+            movement *= sprintSpeed;
+            walkSound.pitch = 1.5f;
+        }
+        else
+            walkSound.pitch = 1;
+
+            //Skate with shift
+            if (isSprinting && isSkateboarding)
+        {
+            //Set skate velocity to max
+            if (skateSprint < 1)
+                skateSprint = skateSprintSpeed;
+
+            //Decrease skate velocity over time
+            skateSprint = skateSprint - Time.deltaTime;
+            movement *= skateSprint;
         }
 
+        //Render skateboard
+        skateboard.SetActive(isSkateboarding && isMoving);
+
         // If moving
-        if (yMove != 0 || xMove != 0)
+        if (isMoving)
         {
+            //Calculate where to move player
+            Vector3 movePlayer = Vector3.Normalize(new Vector3(xMove, yMove)) * movement;
+            
+            if (isSkateboarding)
+            {
+                movePlayer *= skateBaseSpeed;
+            }
+
             //Move player
-            transform.position += new Vector3(xMove, yMove) * movement;
+            transform.position += movePlayer;
             transform.up = new Vector3(xMove, yMove);
+        }
 
-            //Rotate arms
-            currentEulerAngles += new Vector3(x, y, z) * movement * rotationSpeed;
 
+        if (isMoving && !isSkateboarding)
+        {
+            if (!isPlayingWalkSound)
+            {
+                isPlayingWalkSound = true;
+                walkSound.Play(0);
+            }
+
+
+            //Get the arms position
+            currentEulerAngles += new Vector3(x, y, z) * movement * armRotationSpeed;
         }
         else
         {
-            //Set arms to idle
-            currentEulerAngles = new (90, currentEulerAngles.y, currentEulerAngles.z);
+            if (isPlayingWalkSound)
+            {
+                isPlayingWalkSound = false;
+                walkSound.Pause();
+            }
+            //Get arm position into neutral
+            currentEulerAngles = new(90, currentEulerAngles.y, currentEulerAngles.z);
         }
 
         //Set the arms position
