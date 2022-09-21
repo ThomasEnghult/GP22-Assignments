@@ -9,29 +9,22 @@ public class playerController : MonoBehaviour
     public float skateBaseSpeed = 1.5f;
     public float skateSprintSpeed = 2;
 
-    float xMove, yMove;
-    
-    //For moving the arms
-    public float armRotationSpeed;
-    float x, y, z;
+    public Animator anim;
 
-    public Transform elbow_left, elbow_right;
+    float xMove, yMove;
+
+    //public Transform elbow_left, elbow_right;
     public GameObject skateboard;
     AudioSource walkSound;
     bool isPlayingWalkSound = false;
 
-    Vector3 currentEulerAngles;
+    //Vector3 currentEulerAngles;
     float skateSprint;
 
     // Start is called before the first frame update
     void Start()
     {
         walkSound = GetComponent<AudioSource>();
-
-        currentEulerAngles = elbow_left.localEulerAngles;
-        // rotation of arms
-        x = 360;
-        armRotationSpeed = 0.2f;
     }
 
     // Update is called once per frame
@@ -53,6 +46,10 @@ public class playerController : MonoBehaviour
         bool isMoving = yMove != 0 || xMove != 0;
         bool isSkateboarding = Input.GetButton("Jump");
         bool isSprinting = Input.GetKey(KeyCode.LeftShift);
+
+        anim.SetBool("isMoving", isMoving);
+        anim.SetBool("isSkateboarding", isSkateboarding);
+        anim.SetBool("isSprinting", isSprinting);
 
         //Set movespeed
         float movement = movementspeed * Time.deltaTime;
@@ -108,7 +105,7 @@ public class playerController : MonoBehaviour
 
 
             //Get the arms position
-            currentEulerAngles += new Vector3(x, y, z) * movement * armRotationSpeed;
+            //currentEulerAngles += new Vector3(x, y, z) * movement * armRotationSpeed;
         }
         else
         {
@@ -118,12 +115,12 @@ public class playerController : MonoBehaviour
                 walkSound.Pause();
             }
             //Get arm position into neutral
-            currentEulerAngles = new(90, currentEulerAngles.y, currentEulerAngles.z);
+            //currentEulerAngles = new(90, currentEulerAngles.y, currentEulerAngles.z);
         }
 
         //Set the arms position
-        elbow_left.localEulerAngles = currentEulerAngles;
-        elbow_right.localEulerAngles = currentEulerAngles;
+        //elbow_left.localEulerAngles = currentEulerAngles;
+        //elbow_right.localEulerAngles = currentEulerAngles;
     }
 }
 
