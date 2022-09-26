@@ -11,13 +11,14 @@ public class MainScript : ProcessingLite.GP21
 
     public float playerSize = 1;
     public float playerSpeed = 10;
-    public string strBalls;
-    public string playerHighscore;
-    int highscore = 0;
 
+    string playerHighscore;
+    int highscore = 0;
+    string strBalls;
     bool cooldown = false;
 
     BallManager ballManager;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -52,6 +53,11 @@ public class MainScript : ProcessingLite.GP21
         Vector2 ballDirection = new Vector2(xMove, yMove);
         ballManager.updatePlayer(ballDirection);
 
+
+        //Toggle gravity
+        if (Input.GetKeyDown(KeyCode.G))
+            ballManager.gravity = !ballManager.gravity;
+
         //Reset if you died
         if (Input.GetKeyDown(KeyCode.R) && !ballManager.isAlive)
         {
@@ -65,6 +71,7 @@ public class MainScript : ProcessingLite.GP21
             ballManager.resetBalls();
             numOfBalls = 0;
         }
+        //Spawn new balls
         if (!cooldown && ballManager.isAlive)
         {
             cooldown = true;
@@ -72,7 +79,7 @@ public class MainScript : ProcessingLite.GP21
             numOfBalls++;
             strBalls = "Balls: " + numOfBalls;
         }
-
+        //Update position of all balls
         ballManager.updateBalls();
     }
 

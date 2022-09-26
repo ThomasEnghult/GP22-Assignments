@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 
 
-
 public class myBall : ProcessingLite.GP21
 {
     public float radius;
@@ -65,6 +64,7 @@ public class myBall : ProcessingLite.GP21
     {
         position += pos * speed * Time.deltaTime;
     }
+
     public void updateForce(Vector2 force)
     {
         if (gravity)
@@ -184,6 +184,27 @@ public class myBall : ProcessingLite.GP21
             return true;
         }
     }
+
+    public void BallCollider(myBall other)
+    {
+        float m1 = this.radius;
+        float x1 = this.position.x;
+        float y1 = this.position.y;
+        Vector2 v1 = this.force;
+
+        float m2 = other.radius;
+        float x2 = other.position.x;
+        float y2 = other.position.y;
+        Vector2 v2 = other.force;
+
+        Vector2 newVelocity1 = v1 - (2 * m2) / (m1 + m2) * ((v1 - v2) * (x1 - x2)) / Mathf.Abs(x1 - x2) * (x1 - x2);
+        Vector2 newVelocity2 = v2 - (2 * m1) / (m2 + m1) * ((v2 - v1) * (x2 - x1)) / Mathf.Abs(x2 - x1) * (x2 - x1);
+        this.force = newVelocity1;
+        other.force = newVelocity2;
+
+        Debug.Log("Collider triggered!");
+    }
+
 }
 
 

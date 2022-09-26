@@ -7,6 +7,7 @@ public class BallManager : ProcessingLite.GP21
     List<myBall> balls;
     public myBall playerBall;
     public bool isAlive;
+    public bool gravity = false;
 
     public BallManager(float playerSize)
     {
@@ -16,12 +17,21 @@ public class BallManager : ProcessingLite.GP21
         balls = new List<myBall>();
     }
 
-
     public void updateBalls()
     {
         for (int i = 0; i < balls.Count && isAlive; i++)
         {
+
+            for (int j = i + 1; j < balls.Count; j++)
+            {
+                if (balls[i].BallCollision(balls[j]))
+                {
+                    balls[i].BallCollider(balls[j]);
+                }
+            }
             updateBall(balls[i]);
+
+            //Check if player died
             if (balls[i].BallCollision(playerBall))
             {
                 Debug.Log("Game over!");
@@ -31,12 +41,10 @@ public class BallManager : ProcessingLite.GP21
 
         }
     }
+
     private void updateBall(myBall ball)
     {
-        //Toggle gravity
-        if (Input.GetKeyDown(KeyCode.G))
-            ball.gravity = !ball.gravity;
-
+        ball.gravity = gravity;
         ball.updateForce(Vector2.zero);
         ball.updatePos();
         ball.CheckWallCollision();
@@ -50,29 +58,48 @@ public class BallManager : ProcessingLite.GP21
         playerBall.Draw();
     }
 
-
     public void resetBalls()
     {
         balls.Clear();
         Debug.Log("Balls reset!");
     }
+
     public void Instantiate(float minSize, float maxSize, float maxSpeed)
     {
         float randomSize = Random.Range(minSize, maxSize);
         myBall newBall = new myBall(randomSize/2);
 
-        if (!newBall.BallCollision(playerBall))
+        //Prevent new ball to spawn on player
+        bool collision = newBall.BallCollision(playerBall);
+
+        //Prevent new ball to spawn on other ball
+        for (int i = 0; i < balls.Count && !collision; i++)
         {
-            newBall.setRandomForce(maxSpeed);
-            newBall.setColor(Random.Range(0, 255), 0, Random.Range(0, 255));
-            balls.Add(newBall);
-            Debug.Log("Added a new ball!");
+            if (newBall.BallCollision(balls[i]))
+            {
+                collision = true;
+            }
+
         }
-        else
+
+        if(collision)
         {
+            //Try to spawn a new ball
             Instantiate(minSize, maxSize, maxSpeed);
             Debug.Log("Spawn blocked!");
         }
+        else
+        {
+            spawnBall(newBall, maxSpeed);
+        }
 
+    }
+
+    private void spawnBall(myBall newBall, float maxSpeed)
+    {
+        newBall.setRandomForce(maxSpeed);
+        newBall.setColor(Random.Range(0, 255), 0, Random.Range(0, 255));
+        balls.Add(newBall);
+        Debug.Log("Added a new ball!");
     }
 }
