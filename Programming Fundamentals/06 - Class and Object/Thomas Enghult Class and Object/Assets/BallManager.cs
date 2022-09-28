@@ -8,6 +8,7 @@ public class BallManager : ProcessingLite.GP21
     public myBall playerBall;
     public bool isAlive;
     public bool gravity = false;
+    public bool collision = true;
 
     public BallManager(float playerSize)
     {
@@ -22,7 +23,7 @@ public class BallManager : ProcessingLite.GP21
         for (int i = 0; i < balls.Count && isAlive; i++)
         {
 
-            for (int j = i + 1; j < balls.Count; j++)
+            for (int j = i + 1; j < balls.Count && collision; j++)
             {
                 if (balls[i].BallCollision(balls[j]))
                 {

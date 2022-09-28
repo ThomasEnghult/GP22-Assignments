@@ -45,7 +45,8 @@ public class MainScript : ProcessingLite.GP21
         Text(playerHighscore, Width / 2, Height * 0.75f);
         TextSize(20);
         Text("R to respawn       ", 2, Height - 1);
-        Text("G to toggle gravity", 2, Height - 2);
+        Text("G to toggle gravity: " + ballManager.gravity, 3, Height - 2);
+        Text("C to toggle collision: " + ballManager.collision, 3, Height - 3);
 
         //Get player movement input
         float xMove = Input.GetAxis("Horizontal");
@@ -57,6 +58,10 @@ public class MainScript : ProcessingLite.GP21
         //Toggle gravity
         if (Input.GetKeyDown(KeyCode.G))
             ballManager.gravity = !ballManager.gravity;
+
+        //Toggle collision
+        if (Input.GetKeyDown(KeyCode.C))
+            ballManager.collision = !ballManager.collision;
 
         //Reset if you died
         if (Input.GetKeyDown(KeyCode.R) && !ballManager.isAlive)
