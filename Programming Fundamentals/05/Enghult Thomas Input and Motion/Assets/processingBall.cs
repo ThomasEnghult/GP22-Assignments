@@ -4,17 +4,17 @@ using UnityEngine;
 
 public class processingBall : ProcessingLite.GP21
 {
+    [Header("Ball Modifiers")]
     public float ballRadius = 0.5f;
-    public float ballMaxSpeed = 20;
-    public float ballSpeed1 = 5f;
-    public float ballSpeed2 = 50;
-
+    [SerializeField] [Range(0, 100)] int ballMaxSpeed = 50;
+    [SerializeField] [Range(0, 50)] float ballSpeed1 = 5f;
+    [SerializeField] [Range(0, 50)] float ballSpeed2 = 20;
     //Should be positive to slow the ball down
-    public float ballDrag = 0.2f;
-    //Should be a value between 0-1;
-    public float ballBounce = 0.8f;
-    public float gravity = 10;
-    public bool haveGravity = false;
+    [Header("External forces")]
+    [SerializeField] [Range(0, 5)] float ballDrag = 0.2f;
+    [SerializeField][Range(0, 1)] float ballBounce = 0.8f;
+    [SerializeField] [Range(0, 20)] int gravity = 10;
+    [SerializeField] bool haveGravity = false;
 
     Vector3 ballPosition1, ballPosition2;
     Vector3 ballForce2;
@@ -85,7 +85,6 @@ public class processingBall : ProcessingLite.GP21
 
     }
 
-
     void DrawBall(Vector3 ballPosition, int r, int g, int b)
     {
         //Set color
@@ -104,7 +103,6 @@ public class processingBall : ProcessingLite.GP21
         //Circle(ballPosition.x, ballPosition.y - Height, ballRadius * 2);
     }
 
-
     Vector3 WrapHorizontalEdge(Vector3 ballPosition)
     {
         //Handles wrap around on right side
@@ -121,11 +119,12 @@ public class processingBall : ProcessingLite.GP21
         //Handles stop on top side
         if (ballPosition.y > Height - ballRadius)
             ballPosition.y = Height - ballRadius;
-        //Handles wrap around on left side
+        //Handles stop around on bottom side
         else if (ballPosition.y < 0 + ballRadius)
             ballPosition.y = 0 + ballRadius;
         return ballPosition;
     }
+
     Vector3 InvertVerticalEdge(Vector3 ballPosition, Vector3 ballForce, float ballBounce)
     {
         //Invert the force if it hits top side
@@ -136,5 +135,4 @@ public class processingBall : ProcessingLite.GP21
             ballForce.y *= -ballBounce;
         return ballForce;
     }
-
 }
