@@ -7,7 +7,8 @@ public class WalkerTest : ProcessingLite.GP21
 
 	IRandomWalker walker;
 	Vector2 walkerPos;
-	float scaleFactor = 0.05f;
+	float scaleFactor = 0.04f;
+	[SerializeField][Range(0, 240)] int frameRate = 120;
 
 	void Start()
 	{
@@ -15,7 +16,7 @@ public class WalkerTest : ProcessingLite.GP21
 		Fill(255, 0, 0);
 		Stroke(255, 0, 0);
 		//Some adjustments to make testing easier
-		Application.targetFrameRate = 120;
+		//Application.targetFrameRate = frameRate;
 		QualitySettings.vSyncCount = 0;
 
 		//Create a walker from the class Example it has the type of WalkerInterface

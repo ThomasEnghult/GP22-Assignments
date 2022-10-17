@@ -40,7 +40,7 @@ public class assignment : ProcessingLite.GP21
 
         scanLines(spaceBetweenLines, scanchangespeed);
 
-        //Changes color of the drawn lines between red and green
+        //Changes color of the drawn lines between red and green and blue
         if (count % (int)(framerate*colorchangespeed) /255 == 0)
         {
             // Occilates between -1 and 1
