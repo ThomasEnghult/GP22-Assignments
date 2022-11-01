@@ -17,7 +17,7 @@ public class Fire : MonoBehaviour
             cooldown = fireCooldown;
             var newBullet = Instantiate(bullet, transform.position, transform.rotation);
             newBullet.transform.localScale = newBullet.transform.localScale * ((fireCooldown * 10) + 0.5f);
-            newBullet.AddComponent<BulletController>();
+            //newBullet.AddComponent<BulletController>();
             shotsFired++;
             GameObject stats = GameObject.Find("ShotsFired");
             if(stats != null)

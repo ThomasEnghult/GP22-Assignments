@@ -8,17 +8,29 @@ public class MarioController : MonoBehaviour
     [Range(0, 25)][SerializeField] int jumpHeight = 8;
     AudioSource jumpSound;
     Rigidbody2D rb2d;
+    GroundCollider ground;
+    CameraController camContr;
 
     int coinsCollected = 0;
+    private bool hasJumped = false;
     
     void Start()
     {
+        ground = GetComponentInChildren<GroundCollider>();
         rb2d = GetComponent<Rigidbody2D>();
         jumpSound = GetComponent<AudioSource>();
+        camContr = GameObject.Find("Background").GetComponent<CameraController>();
     }
 
-    // Update is called once per frame
     void Update()
+    {
+        if (Input.GetButtonDown("Jump") && ground.isGrounded)
+        {
+            hasJumped = true;
+        }
+    }
+    // Update is called once per frame
+    void FixedUpdate()
     {
         float x = Input.GetAxisRaw("Horizontal");
         //float y = Input.GetAxisRaw("Vertical");
@@ -29,10 +41,13 @@ public class MarioController : MonoBehaviour
         if (x == -1)
             transform.eulerAngles = new(transform.rotation.x, 180);
 
-        transform.position += new Vector3(x*moveSpeed, 0) * Time.deltaTime;
+        Vector3 movement = new Vector3(x * moveSpeed, 0) * Time.deltaTime;
+        transform.position += movement;
+        camContr.moveCameras(movement.x);
 
-        if (Input.GetButtonDown("Jump"))
+        if (hasJumped)
         {
+            hasJumped = false;
             Jump();
         }
     }
