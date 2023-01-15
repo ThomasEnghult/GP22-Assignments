@@ -13,6 +13,7 @@ public class Pathfinding : MonoBehaviour
 
     public void FindPath(Node start, Node end)
     {
+        Debug.Log("Finding Path from:" + start.position + " to " + end.position);
         GridNodes = GetComponent<Grid>().GridNodes;
         List<Node> openSet = new List<Node>();
         HashSet<Node> closedSet = new HashSet<Node>();

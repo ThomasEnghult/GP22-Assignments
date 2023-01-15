@@ -11,10 +11,21 @@ public class Grid : MonoBehaviour
     int gridSizeX = 5;
     int gridSizeY = 5;
 
+    public float distanceBetweenNodes = 8.5f;
+
     public List<Node> path;
 
     public Transform startPos;
     public Transform endPos;
+
+    public GameObject roadLine;
+    public GameObject roadL;
+    public GameObject roadT;
+    public GameObject roadIntersection;
+
+    private GameObject roadHolder;
+
+    Vector3 roadScale = Vector3.one;
 
     public Vector3 mousePos;
 
@@ -23,10 +34,14 @@ public class Grid : MonoBehaviour
 
     void Start()
     {
+        gridSizeX = gridSize * 2 + 1;
+        gridSizeY = gridSize * 2 + 1;
         GenerateGrid();
+        GenerateStructures();
         start = GetClosestNode(startPos.position);
-        mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-        end = GetClosestNode(mousePos);
+        end = GetClosestNode(endPos.position);
+        //mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        //end = GetClosestNode(mousePos);
     }
 
     void Update()
@@ -37,13 +52,15 @@ public class Grid : MonoBehaviour
             gridSizeX = gridSize * 2 + 1;
             gridSizeY = gridSize * 2 + 1;
             GenerateGrid();
+            GenerateStructures();
         }
         
         Node newStart = GetClosestNode(startPos.position);
-        mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-        Node newEnd = GetClosestNode(mousePos);
+        Node newEnd = GetClosestNode(endPos.position);
+        //mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        //Node newEnd = GetClosestNode(mousePos);
 
-        if(newStart != start || newEnd != end)
+        if (newStart != start || newEnd != end)
         {
             start = newStart;
             end = newEnd;
@@ -64,12 +81,11 @@ public class Grid : MonoBehaviour
         {
             for (int x = 0; x < gridSizeX; x++)
             {
+                Node newNode = new Node(new Vector2(x * distanceBetweenNodes, y * distanceBetweenNodes));
+                GridNodes[x, y] = newNode;
                 //if we're on top of a building
                 if(x % 2 == 1 && y % 2 == 1) { continue; }
 
-                Node newNode = new Node(new Vector2(x, y));
-                GridNodes[x, y] = newNode;
-                
                 //if we're inbetween two intersections and not on leftmost column
                 if(x % 2 != 0 && x != 0)
                 {
@@ -90,9 +106,9 @@ public class Grid : MonoBehaviour
 
     void SetCamera()
     {
-        float size = (gridSizeY - 1) / 2f;
+        float size = gridSize * distanceBetweenNodes;
         Camera.main.orthographicSize = size + 0.25f;
-        Camera.main.transform.position = new Vector3(size, size, -10);
+        Camera.main.transform.position = new Vector3(size, size, -size*2);
     }
 
     void ConnectNodeLeftRight(Node node, int x, int y)
@@ -120,15 +136,121 @@ public class Grid : MonoBehaviour
         }
     }
 
+    void GenerateStructures()
+    {
+        roadHolder = new GameObject("RoadHolder");
+        foreach (Node node in GridNodes)
+        {
+            GenerateStructure(node);
+        }
+    }
+
+
+    void GenerateStructure(Node node)
+    {
+        DestroyAllStructures();
+
+        int numOfNeighbours = 0;
+        List<directions> closedDirections = new List<directions>();
+        bool[] OpenDirections = { true, true, true, true };
+        for (directions direction = 0; (int)direction < node.neighbours.Length; direction++)
+        {
+            if (node.neighbours[(int)direction] != null)
+            {
+                numOfNeighbours++;
+            }
+            else
+            {
+                OpenDirections[(int)direction] = false;
+                closedDirections.Add(direction);
+            }
+        }
+
+        switch (numOfNeighbours)
+        {
+            case 0:
+                //Insert City Block
+                break;
+            case 2:
+                //Insert Line Road or L road
+                if (OpenDirections[(int)directions.up] && OpenDirections[(int)directions.down])
+                    CreateRoad(node, roadLine, Quaternion.Euler(90, -90, 90));
+                else if (OpenDirections[(int)directions.left] && OpenDirections[(int)directions.right])
+                    CreateRoad(node, roadLine, Quaternion.Euler(0, -90, 90));
+                else
+                    CreateCornerRoad(node, OpenDirections);
+
+                break;
+            case 3:
+                //Insert T Road
+                int[] rotations = { 0, 180, 90, -90 };
+                int setRotation = rotations[(int)closedDirections[0]];
+                CreateRoad(node, roadT, Quaternion.Euler(setRotation, -90, 90));
+                break;
+            case 4:
+                //Insert Intersection
+                CreateRoad(node, roadIntersection, Quaternion.Euler(90, -90, 90));
+                break;
+
+            default:
+                Debug.Log("No structure was found for " + numOfNeighbours.ToString() + " neighbours");
+                break;
+        }
+    }
+
+    void CreateRoad(Node node, GameObject road, Quaternion rotation)
+    {
+        GameObject newRoad = Instantiate(road, node.position, rotation);
+        newRoad.transform.parent = roadHolder.transform;
+        newRoad.transform.localScale = roadScale;
+        node.gameObject = newRoad;
+    }
+
+    void CreateLineRoad(directions direction)
+    {
+
+    }
+
+    void CreateCornerRoad(Node node,bool[] openDirections)
+    {
+        if (openDirections[(int)directions.up])
+        {
+            if (openDirections[(int)directions.left])
+                CreateRoad(node, roadL, Quaternion.Euler(-90, -90, 90));
+
+            else if (openDirections[(int)directions.right])
+                CreateRoad(node, roadL, Quaternion.Euler(180, -90, 90));
+        }
+        else if (openDirections[(int)directions.down])
+        {
+            if (openDirections[(int)directions.left])
+                CreateRoad(node, roadL, Quaternion.Euler(0, -90, 90));
+
+            if (openDirections[(int)directions.right])
+                CreateRoad(node, roadL, Quaternion.Euler(90, -90, 90));
+        }
+    }
+
+    void DestroyAllStructures()
+    {
+        foreach(Node node in GridNodes)
+        {
+            //DestroyImmediate(node.gameObject);
+        }
+    }
+
     public Node GetClosestNode(Vector2 position)
     {
+        position /= distanceBetweenNodes;
         int x = Mathf.RoundToInt(position.x);
         x = Mathf.Clamp(x, 0, gridSizeX - 1);
 
         int y = Mathf.RoundToInt(position.y);
         y = Mathf.Clamp(y, 0, gridSizeY - 1);
 
-        if(GridNodes[x, y] == null)
+        Debug.Log(x + " " + y);
+
+        if(GridNodes[x, y].neighbours.Length == 0)
         {
             //Distance to an existing node
             float xDistance = 0.5f - position.x % 1;
@@ -157,7 +279,7 @@ public class Grid : MonoBehaviour
     {
         if(GridNodes == null) { return; }
 
-        float size = 0.05f;
+        float size = 0.05f * distanceBetweenNodes;
 
         foreach (var node in GridNodes)
         {
@@ -184,6 +306,7 @@ public class Grid : MonoBehaviour
             if(path.Count != 0)
             {
                 Gizmos.color = Color.red;
+                Debug.Log("Drawing Path");
                 Gizmos.DrawLine(GetClosestNode(startPos.position).position, path[0].position);
             }
 

@@ -12,6 +12,8 @@ public enum directions
 
 public class Node
 {
+    public GameObject gameObject;
+
     public Vector2 position;
     public Node[] neighbours;
     public Node parent;
