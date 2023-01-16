@@ -31,7 +31,7 @@ public class Pathfinding : MonoBehaviour
 
         while(openSet.Count != 0)
         {
-            Debug.Log(openSet.Count);
+            //Debug.Log(openSet.Count);
             Node currentNode = openSet[0];
             for (int i = 1; i < openSet.Count; i++)
             {
@@ -45,7 +45,7 @@ public class Pathfinding : MonoBehaviour
             openSet.Remove(currentNode);
             closedSet.Add(currentNode);
 
-            Debug.Log("Checking " + currentNode.position + " - End " + end.position);
+            Debug.Log("Checking: " + currentNode.position + " - End node:" + end.position);
 
             if(currentNode == end)
             {
@@ -83,24 +83,17 @@ public class Pathfinding : MonoBehaviour
         List<Node> path = new List<Node>();
         Node currentNode = end;
 
-        Debug.Log(start.position + "  before:" + currentNode.position);
+        //Debug.Log(start.position + "  before:" + currentNode.position);
 
-        while (currentNode.position != start.position)
+        while (currentNode != start)
         {
             path.Add(currentNode);
             currentNode = currentNode.parent;
-            if(currentNode == null)
-            {
-                Debug.Log("parent is null");
-            }
-            Debug.Log(start.position + "  parent:" + currentNode.position);
+
+            //Debug.Log(start.position + "  parent:" + currentNode.position);
         }
         path.Reverse();
         Debug.Log("Retraced Path");
-        foreach(Node node in path)
-        {
-            Debug.Log(node.position);
-        }
         GetComponent<Grid>().path = path;
     }
 

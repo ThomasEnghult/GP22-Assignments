@@ -8,10 +8,14 @@ public class PlayerInputs : MonoBehaviour
 
     public Node start;
     public Node end;
+    CameraController camera;
+
+    Vector3 firstTouchPosition;
 
     void Start()
     {
         grid = GetComponent<Grid>();
+        camera = Camera.main.GetComponent<CameraController>();
         start = grid.GetClosestNode(Vector2.zero);
         end = grid.GetClosestNode(Vector2.zero);
     }
@@ -19,24 +23,19 @@ public class PlayerInputs : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        if (Input.GetMouseButtonDown(0))
+        {
+            firstTouchPosition = GetTouchPosition();
+        }
+
         if (Input.touchCount == 1)
         {
-            // create ray from the camera and passing through the touch position:
-            Ray ray = Camera.main.ScreenPointToRay(Input.GetTouch(0).position);
-            Plane plane = new Plane(Vector3.forward, transform.position);
-            float distance = 0; // t$$anonymous$$s will return the distance from the camera
-            if (plane.Raycast(ray, out distance))
-            { // if plane $$anonymous$$t...
-                Vector3 pos = ray.GetPoint(distance); // get the point
-                                                      // pos has the position in the plane you've touched
-                Node newEnd = grid.GetClosestNode(pos);
+            Vector3 pos = GetTouchPosition();
+            grid.UpdateTouchPosition(pos);
+            Debug.Log("Delta distance = " + (pos - firstTouchPosition));
+            camera.MoveCamera(pos - firstTouchPosition);
+            //firstTouchPosition = pos;
 
-                if (newEnd != end)
-                {
-                    end = newEnd;
-                    //GetComponent<Pathfinding>().FindPath(start, end);
-                }
-            }
         }
         if (Input.touchCount == 2)
         {
@@ -52,12 +51,21 @@ public class PlayerInputs : MonoBehaviour
             float difference = currentMagnitude - previousMagnitude;
             Debug.Log(difference);
 
-            //grid.ZoomCamera(difference * 0.01f);
+            camera.ZoomCamera(difference * 0.01f);
         }
     }
 
-    void OnTouch()
+    Vector3 GetTouchPosition()
     {
-
+        // create ray from the camera and passing through the touch position:
+        Ray ray = Camera.main.ScreenPointToRay(Input.GetTouch(0).position);
+        Plane plane = new Plane(Vector3.forward, transform.position);
+        float distance = 0; // t$$anonymous$$s will return the distance from the camera
+        if (plane.Raycast(ray, out distance))
+        { // if plane $$anonymous$$t...
+            return ray.GetPoint(distance); // get the point
+                           // pos has the position in the plane you've touched
+        }
+        return Vector3.zero;
     }
 }

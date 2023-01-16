@@ -54,39 +54,17 @@ public class Grid : MonoBehaviour
             GenerateGrid();
             GenerateStructures();
         }
-        
+
+        if (Input.GetMouseButtonDown(0))
+        {
+            GetComponent<Pathfinding>().FindPath(start, end);
+        }
+    }
+
+    public void UpdateTouchPosition(Vector3 touchPosition)
+    {
         Node newStart = GetClosestNode(startPos.position);
-        Node newEnd = end;
-
-        if(Input.touchCount == 1)
-        {
-            // create ray from the camera and passing through the touch position:
-            Ray ray = Camera.main.ScreenPointToRay(Input.GetTouch(0).position);
-            Plane plane = new Plane(Vector3.forward, transform.position);
-            float distance = 0; // t$$anonymous$$s will return the distance from the camera
-            if (plane.Raycast(ray, out distance))
-            { // if plane $$anonymous$$t...
-                Vector3 pos = ray.GetPoint(distance); // get the point
-                                                      // pos has the position in the plane you've touched
-                newEnd = GetClosestNode(pos);
-            }
-        }
-        if(Input.touchCount == 2)
-        {
-            Touch touch1 = Input.GetTouch(0);
-            Touch touch2 = Input.GetTouch(1);
-
-            Vector2 previousTouch1 = (touch1.position - touch1.deltaPosition);
-            Vector2 previousTouch2 = (touch2.position - touch2.deltaPosition);
-
-            float previousMagnitude = (previousTouch1 - previousTouch2).magnitude;
-            float currentMagnitude = (touch1.position - touch2.position).magnitude;
-
-            float difference = currentMagnitude - previousMagnitude;
-            Debug.Log(difference);
-
-            ZoomCamera(difference * 0.01f);
-        }
+        Node newEnd = GetClosestNode(touchPosition);
 
         if (newStart != start || newEnd != end)
         {
@@ -94,15 +72,11 @@ public class Grid : MonoBehaviour
             end = newEnd;
             GetComponent<Pathfinding>().FindPath(start, end);
         }
-        else if (Input.GetMouseButtonDown(0))
-        {
-            GetComponent<Pathfinding>().FindPath(start, end);
-        }
     }
 
     public void GenerateGrid()
     {
-        SetCamera();
+        Camera.main.GetComponent<CameraController>().SetCamera(gridSize * distanceBetweenNodes);
         gridNodes = new Node[gridSizeX, gridSizeY];
 
         for (int y = 0; y < gridSizeY; y++)
@@ -134,31 +108,7 @@ public class Grid : MonoBehaviour
         }
     }
 
-    public void SetCamera()
-    {
-        float size = gridSize * distanceBetweenNodes;
-        //Camera.main.orthographicSize = size + 0.25f;
-        Camera.main.transform.position = new Vector3(size, size, -size*4);
-    }
 
-    public void MoveCamera()
-    {
-
-    }
-
-    public void ZoomCamera(float increment)
-    {
-        Vector3 cameraPosition = Camera.main.transform.position;
-        float size = gridSize * distanceBetweenNodes;
-        float minZoom = -size;
-        float maxZoom = -size * 4;
-
-        float distance = cameraPosition.z;
-
-        float zoom = Mathf.Clamp(distance - increment, maxZoom, minZoom);
-        cameraPosition.z = zoom;
-        Camera.main.transform.position = cameraPosition;
-    }
 
     void ConnectNodeLeftRight(Node node, int x, int y)
     {
