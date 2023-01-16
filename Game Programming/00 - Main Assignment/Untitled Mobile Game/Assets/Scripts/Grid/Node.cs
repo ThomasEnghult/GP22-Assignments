@@ -17,6 +17,7 @@ public class Node
     public Vector2 position;
     public Node[] neighbours;
     public Node parent;
+    public bool snapToGrid = true;
 
     public int fCost;
 
@@ -39,4 +40,8 @@ public class Node
         neighbours[(int)direction] = node;
     }
 
+    public bool Equals(Node other)
+    {
+        return (this.position.Equals(other.position));
+    }
 }

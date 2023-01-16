@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class Grid : MonoBehaviour
 {
-    public Node[,] GridNodes;
+    public Node[,] gridNodes;
 
     public int gridSize = 5;
     private int currentSize = 5;
@@ -29,8 +29,8 @@ public class Grid : MonoBehaviour
 
     public Vector3 mousePos;
 
-    Node start;
-    Node end;
+    public Node start;
+    public Node end;
 
     void Start()
     {
@@ -56,9 +56,37 @@ public class Grid : MonoBehaviour
         }
         
         Node newStart = GetClosestNode(startPos.position);
-        Node newEnd = GetClosestNode(endPos.position);
-        //mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-        //Node newEnd = GetClosestNode(mousePos);
+        Node newEnd = end;
+
+        if(Input.touchCount == 1)
+        {
+            // create ray from the camera and passing through the touch position:
+            Ray ray = Camera.main.ScreenPointToRay(Input.GetTouch(0).position);
+            Plane plane = new Plane(Vector3.forward, transform.position);
+            float distance = 0; // t$$anonymous$$s will return the distance from the camera
+            if (plane.Raycast(ray, out distance))
+            { // if plane $$anonymous$$t...
+                Vector3 pos = ray.GetPoint(distance); // get the point
+                                                      // pos has the position in the plane you've touched
+                newEnd = GetClosestNode(pos);
+            }
+        }
+        if(Input.touchCount == 2)
+        {
+            Touch touch1 = Input.GetTouch(0);
+            Touch touch2 = Input.GetTouch(1);
+
+            Vector2 previousTouch1 = (touch1.position - touch1.deltaPosition);
+            Vector2 previousTouch2 = (touch2.position - touch2.deltaPosition);
+
+            float previousMagnitude = (previousTouch1 - previousTouch2).magnitude;
+            float currentMagnitude = (touch1.position - touch2.position).magnitude;
+
+            float difference = currentMagnitude - previousMagnitude;
+            Debug.Log(difference);
+
+            ZoomCamera(difference * 0.01f);
+        }
 
         if (newStart != start || newEnd != end)
         {
@@ -75,19 +103,21 @@ public class Grid : MonoBehaviour
     public void GenerateGrid()
     {
         SetCamera();
-        GridNodes = new Node[gridSizeX, gridSizeY];
+        gridNodes = new Node[gridSizeX, gridSizeY];
 
         for (int y = 0; y < gridSizeY; y++)
         {
             for (int x = 0; x < gridSizeX; x++)
             {
                 Node newNode = new Node(new Vector2(x * distanceBetweenNodes, y * distanceBetweenNodes));
-                GridNodes[x, y] = newNode;
+                gridNodes[x, y] = newNode;
                 //if we're on top of a building
-                if(x % 2 == 1 && y % 2 == 1) { continue; }
-
+                if(x % 2 == 1 && y % 2 == 1) 
+                {
+                    gridNodes[x, y].snapToGrid = false; 
+                }
                 //if we're inbetween two intersections and not on leftmost column
-                if(x % 2 != 0 && x != 0)
+                else if(x % 2 != 0 && x != 0)
                 {
                     ConnectNodeLeftRight(newNode, x, y);
                 }
@@ -104,23 +134,42 @@ public class Grid : MonoBehaviour
         }
     }
 
-    void SetCamera()
+    public void SetCamera()
     {
         float size = gridSize * distanceBetweenNodes;
-        Camera.main.orthographicSize = size + 0.25f;
-        Camera.main.transform.position = new Vector3(size, size, -size*2);
+        //Camera.main.orthographicSize = size + 0.25f;
+        Camera.main.transform.position = new Vector3(size, size, -size*4);
+    }
+
+    public void MoveCamera()
+    {
+
+    }
+
+    public void ZoomCamera(float increment)
+    {
+        Vector3 cameraPosition = Camera.main.transform.position;
+        float size = gridSize * distanceBetweenNodes;
+        float minZoom = -size;
+        float maxZoom = -size * 4;
+
+        float distance = cameraPosition.z;
+
+        float zoom = Mathf.Clamp(distance - increment, maxZoom, minZoom);
+        cameraPosition.z = zoom;
+        Camera.main.transform.position = cameraPosition;
     }
 
     void ConnectNodeLeftRight(Node node, int x, int y)
     {
-        Node other = GridNodes[x - 1, y];
+        Node other = gridNodes[x - 1, y];
         node.SetNeighbour(directions.left, other);
         other.SetNeighbour(directions.right, node);
     }
 
     void ConnectNodeUpDown(Node node, int x, int y)
     {
-        Node other = GridNodes[x, y - 1];
+        Node other = gridNodes[x, y - 1];
         node.SetNeighbour(directions.down, other);
         other.SetNeighbour(directions.up, node);
     }
@@ -139,7 +188,7 @@ public class Grid : MonoBehaviour
     void GenerateStructures()
     {
         roadHolder = new GameObject("RoadHolder");
-        foreach (Node node in GridNodes)
+        foreach (Node node in gridNodes)
         {
             GenerateStructure(node);
         }
@@ -206,11 +255,6 @@ public class Grid : MonoBehaviour
         node.gameObject = newRoad;
     }
 
-    void CreateLineRoad(directions direction)
-    {
-
-    }
-
     void CreateCornerRoad(Node node,bool[] openDirections)
     {
         if (openDirections[(int)directions.up])
@@ -233,7 +277,7 @@ public class Grid : MonoBehaviour
 
     void DestroyAllStructures()
     {
-        foreach(Node node in GridNodes)
+        foreach(Node node in gridNodes)
         {
             //DestroyImmediate(node.gameObject);
         }
@@ -248,10 +292,11 @@ public class Grid : MonoBehaviour
         int y = Mathf.RoundToInt(position.y);
         y = Mathf.Clamp(y, 0, gridSizeY - 1);
 
-        Debug.Log(x + " " + y);
+        
 
-        if(GridNodes[x, y].neighbours.Length == 0)
+        if(!gridNodes[x, y].snapToGrid)
         {
+            Debug.Log(x + " " + y);
             //Distance to an existing node
             float xDistance = 0.5f - position.x % 1;
             float yDistance = 0.5f - position.y % 1;
@@ -259,29 +304,29 @@ public class Grid : MonoBehaviour
             if(Mathf.Abs(xDistance) < Mathf.Abs(yDistance))
             {
                 if (xDistance < 0)
-                    return GridNodes[x - 1, y];
+                    return gridNodes[x - 1, y];
                 else
-                    return GridNodes[x + 1, y];
+                    return gridNodes[x + 1, y];
             }
             else
             {
                 if (yDistance < 0)
-                    return GridNodes[x, y - 1];
+                    return gridNodes[x, y - 1];
                 else
-                    return GridNodes[x, y + 1];
+                    return gridNodes[x, y + 1];
             }
         }
 
-        return GridNodes[x, y];
+        return gridNodes[x, y];
     }
 
     private void OnDrawGizmos()
     {
-        if(GridNodes == null) { return; }
+        if(gridNodes == null) { return; }
 
         float size = 0.05f * distanceBetweenNodes;
 
-        foreach (var node in GridNodes)
+        foreach (var node in gridNodes)
         {
             if(node == null) { continue; }
             Gizmos.color = new Color(1, 1, 1);
@@ -293,28 +338,29 @@ public class Grid : MonoBehaviour
                 if(neighbour == null) { continue; }
                 Gizmos.color = new Color(i/2f % 1, 0, 1);
                 float offset = size - (size*2) * (i % 2);
-                Vector2 vOffset = new Vector2(0, offset);
+                Vector3 vOffset = new Vector3(0, offset, -0.5f);
                 if (i < 2)
-                    vOffset = new Vector2(offset, 0);
+                    vOffset = new Vector3(offset, 0, -0.5f);
 
-                Gizmos.DrawLine(neighbour.position + vOffset, node.position + vOffset);
+                Gizmos.DrawLine((Vector3)neighbour.position + vOffset, (Vector3)node.position + vOffset);
             }
         }
 
         if(path != null)
         {
-            if(path.Count != 0)
+            Vector3 vOffset = new Vector3(0, 0, -0.5f);
+            if (path.Count != 0)
             {
                 Gizmos.color = Color.red;
-                Debug.Log("Drawing Path");
-                Gizmos.DrawLine(GetClosestNode(startPos.position).position, path[0].position);
+                //Debug.Log("Drawing Path");
+                Gizmos.DrawLine((Vector3)GetClosestNode(startPos.position).position + vOffset, (Vector3)path[0].position + vOffset);
             }
 
             for (int i = 0; i < path.Count - 1; i++)
             {
                 
                 Gizmos.color = Color.green;
-                Gizmos.DrawLine(path[i].position, path[i + 1].position);
+                Gizmos.DrawLine((Vector3)path[i].position + vOffset, (Vector3)path[i + 1].position + vOffset);
             }
         }
     }

@@ -8,13 +8,22 @@ public class Pathfinding : MonoBehaviour
 
     private void Awake()
     {
-        GridNodes = GetComponent<Grid>().GridNodes;
+        GridNodes = GetComponent<Grid>().gridNodes;
     }
 
     public void FindPath(Node start, Node end)
     {
         Debug.Log("Finding Path from:" + start.position + " to " + end.position);
-        GridNodes = GetComponent<Grid>().GridNodes;
+        Node inputEnd = end;
+        bool endIsIntersection = !(end.GetNeighbour(directions.up) == null && end.GetNeighbour(directions.down) == null ||
+                                end.GetNeighbour(directions.left) == null && end.GetNeighbour(directions.right) == null);
+
+        if (!endIsIntersection)
+        {
+            end = AlignToManhattanGrid(start, end);
+        }
+
+        GridNodes = GetComponent<Grid>().gridNodes;
         List<Node> openSet = new List<Node>();
         HashSet<Node> closedSet = new HashSet<Node>();
 
@@ -22,6 +31,7 @@ public class Pathfinding : MonoBehaviour
 
         while(openSet.Count != 0)
         {
+            Debug.Log(openSet.Count);
             Node currentNode = openSet[0];
             for (int i = 1; i < openSet.Count; i++)
             {
@@ -35,15 +45,13 @@ public class Pathfinding : MonoBehaviour
             openSet.Remove(currentNode);
             closedSet.Add(currentNode);
 
+            Debug.Log("Checking " + currentNode.position + " - End " + end.position);
+
             if(currentNode == end)
             {
-                RetracePath(start, end);
+                RetracePath(start, inputEnd);
                 return;
             }
-
-            //for (int i = 0; i < currentNode.neighbours.Length; i++)
-            //{
-            //    Node neighbour = currentNode.neighbours[i];
 
             Node[] neighbours = ShuffleNeighbours(currentNode.neighbours);
 
@@ -59,6 +67,7 @@ public class Pathfinding : MonoBehaviour
                     neighbour.gCost = movementCostToNeighbour;
                     neighbour.fCost = HeuristicCost(neighbour, end);
                     neighbour.parent = currentNode;
+                    //Debug.Log("Setting " + neighbour.position + " parent to " + currentNode.position);
 
                     if (!openSet.Contains(neighbour))
                     {
@@ -74,14 +83,60 @@ public class Pathfinding : MonoBehaviour
         List<Node> path = new List<Node>();
         Node currentNode = end;
 
-        while(currentNode != start)
+        Debug.Log(start.position + "  before:" + currentNode.position);
+
+        while (currentNode.position != start.position)
         {
             path.Add(currentNode);
-            currentNode = currentNode.parent; 
+            currentNode = currentNode.parent;
+            if(currentNode == null)
+            {
+                Debug.Log("parent is null");
+            }
+            Debug.Log(start.position + "  parent:" + currentNode.position);
         }
         path.Reverse();
-
+        Debug.Log("Retraced Path");
+        foreach(Node node in path)
+        {
+            Debug.Log(node.position);
+        }
         GetComponent<Grid>().path = path;
+    }
+
+    Node AlignToManhattanGrid(Node start, Node end)
+    {
+        Node closest = end;
+        Node previous = end;
+        int currentCost = HeuristicCost(start, end);
+        foreach(Node neighbour in end.neighbours)
+        {
+            if(neighbour == null) { continue; }
+            int cost = HeuristicCost(start, neighbour);
+            if(cost < currentCost)
+            {
+                closest = neighbour;
+                break;
+            }
+            if(cost == currentCost)
+            {
+                if(Random.Range(0,2) == 0)
+                {
+                    closest = neighbour;
+                }
+                else
+                {
+                    closest = previous;
+                }
+            }
+            else
+            {
+                previous = neighbour;
+                currentCost = cost;
+            }
+        }
+        end.parent = closest;
+        return closest;
     }
 
     int HeuristicCost(Node start, Node end)
