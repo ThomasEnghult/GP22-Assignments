@@ -53,9 +53,9 @@ public class Pathfinding : MonoBehaviour
                 return;
             }
 
-            Node[] neighbours = ShuffleNeighbours(currentNode.neighbours);
+            //Node[] neighbours = ShuffleNeighbours(currentNode.neighbours);
 
-            foreach(Node neighbour in neighbours)
+            foreach(Node neighbour in currentNode.ShuffleNeighbours())
             {
                 if (neighbour == null) { continue; }
                 if (closedSet.Contains(neighbour)) { continue; }

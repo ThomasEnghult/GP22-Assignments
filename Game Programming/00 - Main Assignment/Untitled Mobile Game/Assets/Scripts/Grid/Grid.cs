@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class Grid : MonoBehaviour
 {
+    public static Grid Instance;
     public Node[,] gridNodes;
 
     public int gridSize = 5;
@@ -34,6 +35,7 @@ public class Grid : MonoBehaviour
 
     void Start()
     {
+        Instance = this;
         gridSizeX = gridSize * 2 + 1;
         gridSizeY = gridSize * 2 + 1;
         GenerateGrid();
@@ -202,7 +204,7 @@ public class Grid : MonoBehaviour
         GameObject newRoad = Instantiate(road, node.position, rotation);
         newRoad.transform.parent = roadHolder.transform;
         newRoad.transform.localScale = roadScale;
-        node.gameObject = newRoad;
+        node.road = newRoad;
     }
 
     void CreateCornerRoad(Node node,bool[] openDirections)
@@ -287,7 +289,8 @@ public class Grid : MonoBehaviour
                 Node neighbour = node.neighbours[i];
                 if(neighbour == null) { continue; }
                 Gizmos.color = new Color(i/2f % 1, 0, 1);
-                float offset = size - (size*2) * (i % 2);
+                //float offset = size - (size*2) * (i % 2);
+                float offset = 0.5f - 1 * (i % 2);
                 Vector3 vOffset = new Vector3(0, offset, -0.5f);
                 if (i < 2)
                     vOffset = new Vector3(offset, 0, -0.5f);
@@ -298,7 +301,7 @@ public class Grid : MonoBehaviour
 
         if(path != null)
         {
-            Vector3 vOffset = new Vector3(0, 0, -0.5f);
+            Vector3 vOffset = new Vector3(0, 0, -0.2f);
             if (path.Count != 0)
             {
                 Gizmos.color = Color.red;

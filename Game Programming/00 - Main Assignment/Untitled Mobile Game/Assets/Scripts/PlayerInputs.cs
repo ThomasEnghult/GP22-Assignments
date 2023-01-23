@@ -6,6 +6,8 @@ public class PlayerInputs : MonoBehaviour
 {
     Grid grid;
 
+    int canMove = 0;
+
     public Node start;
     public Node end;
     CameraController camera;
@@ -23,6 +25,7 @@ public class PlayerInputs : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+
         if (Input.GetMouseButtonDown(0))
         {
             firstTouchPosition = GetTouchPosition();
@@ -30,15 +33,23 @@ public class PlayerInputs : MonoBehaviour
 
         if (Input.touchCount == 1)
         {
-            Vector3 pos = GetTouchPosition();
-            grid.UpdateTouchPosition(pos);
-            Debug.Log("Delta distance = " + (pos - firstTouchPosition));
-            camera.MoveCamera(pos - firstTouchPosition);
-            //firstTouchPosition = pos;
+            if (canMove == 2)
+            {
+                Vector3 pos = GetTouchPosition();
+                grid.UpdateTouchPosition(pos);
+                Debug.Log("Delta distance = " + (pos - firstTouchPosition));
+                camera.MoveCamera(pos - firstTouchPosition);
+            }
+            else if(canMove == 0)
+            {
+                canMove = 1;
+                Invoke(nameof(UnlockMovement), 0.1f);
+            }
 
         }
         if (Input.touchCount == 2)
         {
+            canMove = 0;
             Touch touch1 = Input.GetTouch(0);
             Touch touch2 = Input.GetTouch(1);
 
@@ -55,8 +66,15 @@ public class PlayerInputs : MonoBehaviour
         }
     }
 
+    void UnlockMovement()
+    {
+        canMove = 2;
+        firstTouchPosition = GetTouchPosition();
+    }
+
     Vector3 GetTouchPosition()
     {
+        if(Input.touchCount == 0) { return Vector3.zero; }
         // create ray from the camera and passing through the touch position:
         Ray ray = Camera.main.ScreenPointToRay(Input.GetTouch(0).position);
         Plane plane = new Plane(Vector3.forward, transform.position);
