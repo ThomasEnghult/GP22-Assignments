@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class PlayerInputs : MonoBehaviour
 {
-    Grid grid;
+    CityGrid grid;
 
     int canMove = 0;
 
@@ -16,10 +16,10 @@ public class PlayerInputs : MonoBehaviour
 
     void Start()
     {
-        grid = GetComponent<Grid>();
+        grid = GetComponent<CityGrid>();
         camera = Camera.main.GetComponent<CameraController>();
-        start = grid.GetClosestNode(Vector2.zero);
-        end = grid.GetClosestNode(Vector2.zero);
+        //start = grid.GetClosestNode(Vector2.zero);
+        //end = grid.GetClosestNode(Vector2.zero);
     }
 
     // Update is called once per frame
@@ -77,7 +77,7 @@ public class PlayerInputs : MonoBehaviour
         if(Input.touchCount == 0) { return Vector3.zero; }
         // create ray from the camera and passing through the touch position:
         Ray ray = Camera.main.ScreenPointToRay(Input.GetTouch(0).position);
-        Plane plane = new Plane(Vector3.forward, transform.position);
+        Plane plane = new Plane(Vector3.up, transform.position);
         float distance = 0; // t$$anonymous$$s will return the distance from the camera
         if (plane.Raycast(ray, out distance))
         { // if plane $$anonymous$$t...

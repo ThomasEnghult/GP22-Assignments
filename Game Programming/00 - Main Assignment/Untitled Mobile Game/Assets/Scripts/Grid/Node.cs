@@ -14,7 +14,7 @@ public class Node
 {
     public GameObject road;
 
-    public Vector2 position;
+    public Vector3 position;
     public Node[] neighbours;
     public Node parent;
     public bool snapToGrid = true;
@@ -24,7 +24,9 @@ public class Node
     public int gCost;
     public int hCost;
 
-    public Node(Vector2 position)
+    public bool isOpen = true;
+
+    public Node(Vector3 position)
     {
         neighbours = new Node[4];
         this.position = position;

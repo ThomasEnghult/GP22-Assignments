@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "849911275949",
+    "firebase_url": "https://untitled-mobile-game-default-rtdb.europe-west1.firebasedatabase.app",
+    "project_id": "untitled-mobile-game",
+    "storage_bucket": "untitled-mobile-game.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:849911275949:android:a9bc8a9e5d4eaed9570124",
+        "android_client_info": {
+          "package_name": "com.yrgo.UntitledMobileGame"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "849911275949-asaqel3irkpuj38l4bcv7c0i6835fh5c.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDFLrgzxW21Yz2WDVaIGfFPIeqo48RXhrM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "849911275949-asaqel3irkpuj38l4bcv7c0i6835fh5c.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

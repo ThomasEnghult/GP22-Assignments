@@ -8,12 +8,26 @@ public class Pathfinding : MonoBehaviour
 
     private void Awake()
     {
-        GridNodes = GetComponent<Grid>().gridNodes;
+        GridNodes = GetComponent<CityGrid>().gridNodes;
     }
 
     public void FindPath(Node start, Node end)
     {
         Debug.Log("Finding Path from:" + start.position + " to " + end.position);
+
+        if (!end.isOpen)
+        {
+            Debug.Log("End node is closed!");
+            return;
+        }
+        else
+        {
+            foreach(Node neighbour in end.neighbours)
+            {
+
+            }
+        }
+
         Node inputEnd = end;
         bool endIsIntersection = !(end.GetNeighbour(directions.up) == null && end.GetNeighbour(directions.down) == null ||
                                 end.GetNeighbour(directions.left) == null && end.GetNeighbour(directions.right) == null);
@@ -23,7 +37,7 @@ public class Pathfinding : MonoBehaviour
             end = AlignToManhattanGrid(start, end);
         }
 
-        GridNodes = GetComponent<Grid>().gridNodes;
+        GridNodes = GetComponent<CityGrid>().gridNodes;
         List<Node> openSet = new List<Node>();
         HashSet<Node> closedSet = new HashSet<Node>();
 
@@ -36,7 +50,7 @@ public class Pathfinding : MonoBehaviour
             for (int i = 1; i < openSet.Count; i++)
             {
                 Node nextNode = openSet[i];
-                if(currentNode.fCost > nextNode.fCost || currentNode.fCost == nextNode.fCost && currentNode.hCost > nextNode.hCost)
+                if(currentNode.fCost > nextNode.fCost || (currentNode.fCost == nextNode.fCost && currentNode.hCost > nextNode.hCost))
                 {
                     currentNode = nextNode;
                 }
@@ -57,7 +71,7 @@ public class Pathfinding : MonoBehaviour
 
             foreach(Node neighbour in currentNode.ShuffleNeighbours())
             {
-                if (neighbour == null) { continue; }
+                if (neighbour == null || !neighbour.isOpen) { continue; }
                 if (closedSet.Contains(neighbour)) { continue; }
 
                 int movementCostToNeighbour = currentNode.gCost + HeuristicCost(currentNode, neighbour);
@@ -65,7 +79,8 @@ public class Pathfinding : MonoBehaviour
                 if(movementCostToNeighbour < neighbour.gCost || !openSet.Contains(neighbour))
                 {
                     neighbour.gCost = movementCostToNeighbour;
-                    neighbour.fCost = HeuristicCost(neighbour, end);
+                    neighbour.hCost = HeuristicCost(neighbour, end);
+                    neighbour.fCost = neighbour.gCost + neighbour.hCost;
                     neighbour.parent = currentNode;
                     //Debug.Log("Setting " + neighbour.position + " parent to " + currentNode.position);
 
@@ -94,7 +109,7 @@ public class Pathfinding : MonoBehaviour
         }
         path.Reverse();
         Debug.Log("Retraced Path");
-        GetComponent<Grid>().path = path;
+        GetComponent<CityGrid>().path = path;
     }
 
     Node AlignToManhattanGrid(Node start, Node end)
@@ -104,7 +119,11 @@ public class Pathfinding : MonoBehaviour
         int currentCost = HeuristicCost(start, end);
         foreach(Node neighbour in end.neighbours)
         {
-            if(neighbour == null) { continue; }
+            if(neighbour == null || !neighbour.isOpen) { continue; }
+
+            if (closest == end)
+                closest = neighbour;
+
             int cost = HeuristicCost(start, neighbour);
             if(cost < currentCost)
             {
@@ -135,8 +154,8 @@ public class Pathfinding : MonoBehaviour
     int HeuristicCost(Node start, Node end)
     {
         int deltaX = (int)Mathf.Abs(start.position.x - end.position.x);
-        int deltaY = (int)Mathf.Abs(start.position.y - end.position.y);
-        return deltaX + deltaY;
+        int deltaZ = (int)Mathf.Abs(start.position.z - end.position.z);
+        return deltaX + deltaZ;
     }
 
     public Node[] ShuffleNeighbours(Node[] neighbours)
