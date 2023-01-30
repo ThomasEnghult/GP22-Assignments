@@ -11,8 +11,11 @@ enum CarStatus
 
 public class CarController : MonoBehaviour
 {
-    Node moveFrom;
-    Node moveTo;
+    CityGrid cityGrid;
+    public List<Node> path;
+
+    public Node moveFrom;
+    public Node moveTo;
 
     Vector3 move;
     float counter = 0;
@@ -23,15 +26,14 @@ public class CarController : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        Invoke(nameof(Init), 0.5f);
+        Invoke(nameof(Init), 0.05f);
     }
 
     void Init()
     {
-        moveFrom = CityGrid.Instance.GetClosestNode(transform.position);
-        moveTo = moveFrom.GetRandomDirection(moveFrom);
-        move = moveTo.position - moveFrom.position;
-        transform.forward = move;
+        cityGrid = GameObject.Find("Grid").GetComponent<CityGrid>();
+        path = cityGrid.path;
+        moveFrom = cityGrid.GetClosestNode(transform.position);
         initialized = true;
     }
 
@@ -41,52 +43,47 @@ public class CarController : MonoBehaviour
         if (!initialized) { return; }
 
         counter += Time.deltaTime;
-        MoveToNode();
+
+        if (moveTo != null)
+        {
+            MoveToNode();
+        }
 
         if (counter > 1)
         {
             counter = 0;
-            transform.position = moveTo.position;
-            GetNewDestination();
+
+            if (path.Count != 0)
+                GetNewDestination();
         }
     }
 
     void GetNewDestination()
     {
-        Node newDirection = moveTo.GetRandomDirection(moveFrom);
-        
-        moveFrom = moveTo;
-        moveTo = newDirection;
-        move = moveTo.position - moveFrom.position;
+        //Node newDirection = moveTo.GetRandomDirection(moveFrom);
 
-        transform.forward = move;
+        //Pop first element from list, current position
+        moveFrom = path[0];
+        path.RemoveAt(0);
 
-        //float rotation = rotations[(int)travellingToDirection];
-        //transform.eulerAngles = new Vector3(rotation, 90, -90);
+        Debug.Log("Popped node at: " + moveFrom.position);
+
+        transform.position = moveFrom.position;
+        //If we have a path to go to
+        if (path.Count != 0)
+        {
+            moveTo = path[0];
+            move = moveTo.position - moveFrom.position;
+            Debug.Log("Moving towards: " + moveTo.position);
+
+            transform.forward = move;
+        }
+        else
+            moveTo = null;
     }
 
     void MoveToNode()
     {
         transform.position += move * Time.deltaTime;
     }
-
-    //float[] rotations = { 270, 90, 180, 360 };
-    //void TurnToDirection(directions from, directions to, float counter)
-    //{
-    //    Debug.Log("From:" + from + " To:" + to);
-
-    //    //UP > Right 270 -> 360
-    //    //UP > Left 270 -> 180
-
-    //    float angleFrom = -rotations[(int)from] * Mathf.Deg2Rad;
-    //    float angleTo = -rotations[(int)to] * Mathf.Deg2Rad;
-    //    float angle = (angleTo - angleFrom ) * counter;
-
-    //    //Debug.Log(angle);
-
-    //    Vector3 center = moveFrom.position;
-    //    var offset = new Vector2(Mathf.Sin(angleFrom + angle), Mathf.Cos(angleFrom + angle)) * 1.25f;
-    //    transform.position = center + (Vector3)offset;
-
-    //}
 }

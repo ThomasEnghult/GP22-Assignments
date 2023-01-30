@@ -11,15 +11,16 @@ public class CityGrid : MonoBehaviour
     public int gridSize = 5;
     private int currentSize;
     int gridSizeX = 5;
-    int gridSizeY = 5;
+    int gridSizeZ = 5;
 
     public float distanceBetweenNodes = 8.5f;
 
-    public List<Node> path;
+    public List<Node> path = new List<Node>();
 
     public Transform startPos;
     public Transform endPos;
 
+    public GameObject cityBlock;
     public GameObject roadLine;
     public GameObject roadL;
     public GameObject roadT;
@@ -31,14 +32,22 @@ public class CityGrid : MonoBehaviour
 
     public Vector3 mousePos;
 
+    Pathfinding pathfinder;
+
     public Node start;
     public Node end;
 
+    public GameObject selectedCar;
+    CarController carController;
+
     void Start()
     {
+        pathfinder = GetComponent<Pathfinding>();
+        carController = selectedCar.GetComponent<CarController>();
+
         Instance = this;
         gridSizeX = gridSize * 2 + 1;
-        gridSizeY = gridSize * 2 + 1;
+        gridSizeZ = gridSize * 2 + 1;
         //GenerateGrid();
         //GenerateStructures();
         //mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
@@ -47,11 +56,11 @@ public class CityGrid : MonoBehaviour
 
     void Update()
     {
-        if(gridSize != currentSize)
+        if (gridSize != currentSize)
         {
             currentSize = gridSize;
             gridSizeX = gridSize * 2 + 1;
-            gridSizeY = gridSize * 2 + 1;
+            gridSizeZ = gridSize * 2 + 1;
             GenerateGrid();
             GenerateStructures();
             start = GetClosestNode(startPos.position);
@@ -60,29 +69,60 @@ public class CityGrid : MonoBehaviour
 
         if (Input.GetMouseButtonDown(0))
         {
-            GetComponent<Pathfinding>().FindPath(start, end);
+            startPos = selectedCar.transform;
+
+            if(carController.moveTo != null)
+            {
+                start = carController.moveTo;
+            }
+            else
+            {
+                start = carController.moveFrom;
+            }
+
+            //start = GetClosestNode(startPos.position);
+
+            path = GetPath(start, end);
         }
+    }
+
+    public List<Node> GetPath(Node start, Node end)
+    {
+        List<Node> newPath = pathfinder.FindPath(start, end);
+        foreach(Node node in newPath)
+        {
+            Debug.Log(node.position);
+        }
+
+        if (newPath != null)
+        {
+            selectedCar.GetComponent<CarController>().path = newPath;
+            return newPath;
+        }
+        else
+        {
+            return path;
+        }
+
     }
 
     public void UpdateTouchPosition(Vector3 touchPosition)
     {
-        Node newStart = GetClosestNode(startPos.position);
         Node newEnd = GetClosestNode(touchPosition);
 
-        if (newStart != start || newEnd != end)
+        if (newEnd != end)
         {
-            start = newStart;
             end = newEnd;
-            GetComponent<Pathfinding>().FindPath(start, end);
+            path = GetPath(start, end);
         }
     }
 
     public void GenerateGrid()
     {
         Camera.main.GetComponent<CameraController>().SetCamera(gridSize * distanceBetweenNodes);
-        gridNodes = new Node[gridSizeX, gridSizeY];
+        gridNodes = new Node[gridSizeX, gridSizeZ];
 
-        for (int z = 0; z < gridSizeY; z++)
+        for (int z = 0; z < gridSizeZ; z++)
         {
             for (int x = 0; x < gridSizeX; x++)
             {
@@ -119,15 +159,15 @@ public class CityGrid : MonoBehaviour
     void ConnectNodeLeftRight(Node node, int x, int y)
     {
         Node other = gridNodes[x - 1, y];
-        node.SetNeighbour(directions.left, other);
-        other.SetNeighbour(directions.right, node);
+        node.SetNeighbour(Directions.left, other);
+        other.SetNeighbour(Directions.right, node);
     }
 
     void ConnectNodeUpDown(Node node, int x, int y)
     {
         Node other = gridNodes[x, y - 1];
-        node.SetNeighbour(directions.down, other);
-        other.SetNeighbour(directions.up, node);
+        node.SetNeighbour(Directions.down, other);
+        other.SetNeighbour(Directions.up, node);
     }
     void ConnectCorner(Node node, int x, int y)
     {
@@ -154,15 +194,14 @@ public class CityGrid : MonoBehaviour
         }
     }
 
-
     void GenerateStructure(Node node)
     {
         
 
         int numOfNeighbours = 0;
-        List<directions> closedDirections = new List<directions>();
+        List<Directions> closedDirections = new List<Directions>();
         bool[] OpenDirections = { true, true, true, true };
-        for (directions direction = 0; (int)direction < node.neighbours.Length; direction++)
+        for (Directions direction = 0; (int)direction < node.neighbours.Length; direction++)
         {
             if (node.neighbours[(int)direction] != null)
             {
@@ -179,13 +218,18 @@ public class CityGrid : MonoBehaviour
         {
             case 0:
                 //Insert City Block
+                int rotation = Random.Range(0, 5) * 90;
+                CreateStructure(node, cityBlock, Quaternion.Euler(0, rotation, 0));
+
                 break;
             case 2:
                 //Insert Line Road or L road
-                if (OpenDirections[(int)directions.up] && OpenDirections[(int)directions.down])
-                    CreateRoad(node, roadLine, Quaternion.Euler(0, 0, 0));
-                else if (OpenDirections[(int)directions.left] && OpenDirections[(int)directions.right])
-                    CreateRoad(node, roadLine, Quaternion.Euler(0, 90, 0));
+                if (OpenDirections[(int)Directions.up] && OpenDirections[(int)Directions.down])
+                    CreateStructure(node, roadLine, Quaternion.identity);
+
+                else if (OpenDirections[(int)Directions.left] && OpenDirections[(int)Directions.right])
+                    CreateStructure(node, roadLine, Quaternion.Euler(0, 90, 0));
+
                 else
                     CreateCornerRoad(node, OpenDirections);
 
@@ -194,11 +238,11 @@ public class CityGrid : MonoBehaviour
                 //Insert T Road
                 int[] rotations = { -90, 90, 180, 0 };
                 int setRotation = rotations[(int)closedDirections[0]];
-                CreateRoad(node, roadT, Quaternion.Euler(0, setRotation, 0));
+                CreateStructure(node, roadT, Quaternion.Euler(0, setRotation, 0));
                 break;
             case 4:
                 //Insert Intersection
-                CreateRoad(node, roadIntersection, Quaternion.Euler(0, 0, 0));
+                CreateStructure(node, roadIntersection, Quaternion.Euler(0, 0, 0));
                 break;
 
             default:
@@ -207,31 +251,31 @@ public class CityGrid : MonoBehaviour
         }
     }
 
-    void CreateRoad(Node node, GameObject road, Quaternion rotation)
+    void CreateStructure(Node node, GameObject road, Quaternion rotation)
     {
         GameObject newRoad = Instantiate(road, node.position, rotation);
         newRoad.transform.parent = roadHolder.transform;
         newRoad.transform.localScale = roadScale;
-        node.road = newRoad;
+        node.structure = newRoad;
     }
 
     void CreateCornerRoad(Node node,bool[] openDirections)
     {
-        if (openDirections[(int)directions.up])
+        if (openDirections[(int)Directions.up])
         {
-            if (openDirections[(int)directions.left])
-                CreateRoad(node, roadL, Quaternion.Euler(0, 0, 0));
+            if (openDirections[(int)Directions.left])
+                CreateStructure(node, roadL, Quaternion.Euler(0, 0, 0));
 
-            else if (openDirections[(int)directions.right])
-                CreateRoad(node, roadL, Quaternion.Euler(0, 90, 0));
+            else if (openDirections[(int)Directions.right])
+                CreateStructure(node, roadL, Quaternion.Euler(0, 90, 0));
         }
-        else if (openDirections[(int)directions.down])
+        else if (openDirections[(int)Directions.down])
         {
-            if (openDirections[(int)directions.left])
-                CreateRoad(node, roadL, Quaternion.Euler(0, -90, 0));
+            if (openDirections[(int)Directions.left])
+                CreateStructure(node, roadL, Quaternion.Euler(0, -90, 0));
 
-            if (openDirections[(int)directions.right])
-                CreateRoad(node, roadL, Quaternion.Euler(0, 180, 0));
+            if (openDirections[(int)Directions.right])
+                CreateStructure(node, roadL, Quaternion.Euler(0, 180, 0));
         }
     }
 
@@ -242,9 +286,7 @@ public class CityGrid : MonoBehaviour
         x = Mathf.Clamp(x, 0, gridSizeX - 1);
 
         int z = Mathf.RoundToInt(position.z);
-        z = Mathf.Clamp(z, 0, gridSizeY - 1);
-
-        
+        z = Mathf.Clamp(z, 0, gridSizeZ - 1);
 
         if(!gridNodes[x, z].snapToGrid)
         {

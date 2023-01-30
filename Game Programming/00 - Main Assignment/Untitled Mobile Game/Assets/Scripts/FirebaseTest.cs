@@ -13,11 +13,31 @@ public class SavePosition
     public string name;
 }
 
+
+
 public class FirebaseTest : MonoBehaviour
 {
     FirebaseAuth auth;
     TMP_InputField inputField;
     SavePosition savePosition;
+    public static FirebaseTest Instance;
+
+    public TMP_InputField input;
+
+    private void Awake()
+    {
+        if(Instance == null)
+        {
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
+
+
+    }
 
     void Start()
     {

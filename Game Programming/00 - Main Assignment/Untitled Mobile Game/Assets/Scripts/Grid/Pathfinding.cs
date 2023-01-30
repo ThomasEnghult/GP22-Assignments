@@ -11,26 +11,26 @@ public class Pathfinding : MonoBehaviour
         GridNodes = GetComponent<CityGrid>().gridNodes;
     }
 
-    public void FindPath(Node start, Node end)
+    public List<Node> FindPath(Node start, Node end)
     {
         Debug.Log("Finding Path from:" + start.position + " to " + end.position);
 
         if (!end.isOpen)
         {
             Debug.Log("End node is closed!");
-            return;
+            return null;
         }
-        else
-        {
-            foreach(Node neighbour in end.neighbours)
-            {
+        //else
+        //{
+        //    foreach(Node neighbour in end.neighbours)
+        //    {
 
-            }
-        }
+        //    }
+        //}
 
         Node inputEnd = end;
-        bool endIsIntersection = !(end.GetNeighbour(directions.up) == null && end.GetNeighbour(directions.down) == null ||
-                                end.GetNeighbour(directions.left) == null && end.GetNeighbour(directions.right) == null);
+        bool endIsIntersection = !(end.GetNeighbour(Directions.up) == null && end.GetNeighbour(Directions.down) == null ||
+                                end.GetNeighbour(Directions.left) == null && end.GetNeighbour(Directions.right) == null);
 
         if (!endIsIntersection)
         {
@@ -63,8 +63,7 @@ public class Pathfinding : MonoBehaviour
 
             if(currentNode == end)
             {
-                RetracePath(start, inputEnd);
-                return;
+                return RetracePath(start, inputEnd);
             }
 
             //Node[] neighbours = ShuffleNeighbours(currentNode.neighbours);
@@ -91,9 +90,11 @@ public class Pathfinding : MonoBehaviour
                 }
             }
         }
+        Debug.Log("No path was found!");
+        return null;
     }
 
-    void RetracePath(Node start, Node end)
+    List<Node> RetracePath(Node start, Node end)
     {
         List<Node> path = new List<Node>();
         Node currentNode = end;
@@ -107,9 +108,11 @@ public class Pathfinding : MonoBehaviour
 
             //Debug.Log(start.position + "  parent:" + currentNode.position);
         }
+        path.Add(currentNode);
         path.Reverse();
         Debug.Log("Retraced Path");
-        GetComponent<CityGrid>().path = path;
+        return path;
+        //GetComponent<CityGrid>().path = path;
     }
 
     Node AlignToManhattanGrid(Node start, Node end)

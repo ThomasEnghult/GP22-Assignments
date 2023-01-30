@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum directions
+public enum Directions
 {
     up,
     down,
@@ -12,7 +12,7 @@ public enum directions
 
 public class Node
 {
-    public GameObject road;
+    public GameObject structure;
 
     public Vector3 position;
     public Node[] neighbours;
@@ -20,7 +20,6 @@ public class Node
     public bool snapToGrid = true;
 
     public int fCost;
-
     public int gCost;
     public int hCost;
 
@@ -32,12 +31,12 @@ public class Node
         this.position = position;
     }
 
-    public Node GetNeighbour(directions direction)
+    public Node GetNeighbour(Directions direction)
     {
         return neighbours[(int)direction];
     }
 
-    public void SetNeighbour(directions direction, Node node)
+    public void SetNeighbour(Directions direction, Node node)
     {
         neighbours[(int)direction] = node;
     }
@@ -60,10 +59,10 @@ public class Node
         return cameFromThisNode;
     }
 
-    public directions GetRandomDirection(directions cameFromThisDirection)
+    public Directions GetRandomDirection(Directions cameFromThisDirection)
     {
-        List<directions> validDirections = new List<directions>();
-        for (directions direction = 0; (int)direction < neighbours.Length; direction++)
+        List<Directions> validDirections = new List<Directions>();
+        for (Directions direction = 0; (int)direction < neighbours.Length; direction++)
         {
             if(neighbours[(int)direction] != null && direction == cameFromThisDirection)
             {
