@@ -59,7 +59,7 @@ public class Pathfinding : MonoBehaviour
             openSet.Remove(currentNode);
             closedSet.Add(currentNode);
 
-            Debug.Log("Checking: " + currentNode.position + " - End node:" + end.position);
+            //Debug.Log("Checking: " + currentNode.position + " - End node:" + end.position);
 
             if(currentNode == end)
             {

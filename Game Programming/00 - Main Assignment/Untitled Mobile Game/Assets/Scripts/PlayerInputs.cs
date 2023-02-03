@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 public class PlayerInputs : MonoBehaviour
 {
@@ -26,55 +27,82 @@ public class PlayerInputs : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-
         if (Input.GetMouseButtonDown(0))
         {
-            firstTouchPosition = GetTouchPosition();
-            selected = grid.GetClosestNode(firstTouchPosition);
-        }
-
-        if (Input.touchCount == 1)
-        {
-            if (canMove == 2)
+            if(GetTouchPosition(out firstTouchPosition))
             {
-                Vector3 pos = GetTouchPosition();
-                grid.UpdateTouchPosition(pos);
-                //Debug.Log("Delta distance = " + (pos - firstTouchPosition));
-                camera.MoveCamera(pos - firstTouchPosition);
+                selected = grid.GetClosestNode(firstTouchPosition);
             }
-            else if(canMove == 0)
+            else
             {
+                selected = grid.GetClosestNode(firstTouchPosition);
+                selected.Interact();
                 canMove = 1;
-                Invoke(nameof(UnlockMovement), 0.1f);
             }
-
         }
-        if (Input.touchCount == 2)
+
+        switch (Input.touchCount)
         {
-            canMove = 0;
-            PinchZoom();
+            case 0:
+            {
+                canMove = 2;
+                break;
+            }
+            case 1:
+            {
+                if (canMove == 2)
+                {
+                    if (GetTouchPosition(out Vector3 pos))
+                    {
+                        grid.UpdateTouchPosition(pos);
+                        camera.MoveCamera(pos - firstTouchPosition);
+                    }
+                }
+                else if (canMove == 0)
+                {
+                    canMove = 1;
+                    Invoke(nameof(UnlockMovement), 0.1f);
+                }
+                break;
+            }
+            case 2:
+            {
+                canMove = 0;
+                PinchZoom();
+                break;
+            }
         }
     }
 
-    Vector3 GetTouchPosition()
+    bool GetTouchPosition(out Vector3 position)
     {
-        if (Input.touchCount == 0) { return Vector3.zero; }
+        bool touchedGround = true;
+        position = firstTouchPosition;
+        if (Input.touchCount == 0) { return false; }
         // create ray from the camera and passing through the touch position:
         Ray ray = Camera.main.ScreenPointToRay(Input.GetTouch(0).position);
         Plane plane = new Plane(Vector3.up, transform.position);
-        float distance = 0; // t$$anonymous$$s will return the distance from the camera
-        if (plane.Raycast(ray, out distance))
+
+
+        if (EventSystem.current.IsPointerOverGameObject(Input.GetTouch(0).fingerId))
+        {
+            touchedGround = false;
+            Debug.Log("Touched the UI");
+        }
+
+        if (plane.Raycast(ray, out float distance))
         { // if plane $$anonymous$$t...
-            return ray.GetPoint(distance); // get the point
+            position = ray.GetPoint(distance);
+            return touchedGround; // get the point
                                            // pos has the position in the plane you've touched
         }
-        return Vector3.zero;
+        return false;
     }
 
     void UnlockMovement()
     {
         canMove = 2;
-        firstTouchPosition = GetTouchPosition();
+        GetTouchPosition(out firstTouchPosition);
     }
 
     void PinchZoom()
@@ -90,6 +118,6 @@ public class PlayerInputs : MonoBehaviour
 
         float difference = currentMagnitude - previousMagnitude;
 
-        camera.ZoomCamera(difference * 0.01f);
+        camera.ZoomCamera(difference * 0.1f);
     }
 }

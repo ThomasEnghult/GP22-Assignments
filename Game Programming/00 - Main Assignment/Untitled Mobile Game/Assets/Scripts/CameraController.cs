@@ -6,17 +6,6 @@ public class CameraController : MonoBehaviour
 {
 
     float size;
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
 
     public void SetCamera(float size)
     {
@@ -28,7 +17,8 @@ public class CameraController : MonoBehaviour
     public void MoveCamera(Vector3 direction)
     {
         Vector3 newCameraPosition = Camera.main.transform.position - direction;
-        Debug.Log("before:" + newCameraPosition);
+        Debug.Log("direction;" + direction);
+        Debug.Log("before:" + transform.position);
         newCameraPosition.x = Mathf.Clamp(newCameraPosition.x ,0, size * 2);
         newCameraPosition.z = Mathf.Clamp(newCameraPosition.z, 0, size * 2);
         Debug.Log("after" + newCameraPosition);

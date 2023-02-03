@@ -26,7 +26,12 @@ public class CityGrid : MonoBehaviour
     public GameObject roadT;
     public GameObject roadIntersection;
 
-    private GameObject roadHolder;
+    public GameObject blockade;
+
+    public GameObject nodeIcon;
+
+    private GameObject structureHolder;
+    private GameObject nodeInteractionHolder;
 
     Vector3 roadScale = Vector3.one;
 
@@ -40,8 +45,14 @@ public class CityGrid : MonoBehaviour
     public GameObject selectedCar;
     CarController carController;
 
+    private LineRenderer lineRenderer;
+
     void Start()
     {
+        lineRenderer = GetComponentInChildren<LineRenderer>();
+        nodeInteractionHolder = new GameObject();
+        nodeInteractionHolder.name = "NodeInteractionHolder";
+
         pathfinder = GetComponent<Pathfinding>();
         carController = selectedCar.GetComponent<CarController>();
 
@@ -66,37 +77,16 @@ public class CityGrid : MonoBehaviour
             start = GetClosestNode(startPos.position);
             end = GetClosestNode(endPos.position);
         }
-
-        if (Input.GetMouseButtonDown(0))
-        {
-            startPos = selectedCar.transform;
-
-            if(carController.moveTo != null)
-            {
-                start = carController.moveTo;
-            }
-            else
-            {
-                start = carController.moveFrom;
-            }
-
-            //start = GetClosestNode(startPos.position);
-
-            path = GetPath(start, end);
-        }
     }
 
     public List<Node> GetPath(Node start, Node end)
     {
         List<Node> newPath = pathfinder.FindPath(start, end);
-        foreach(Node node in newPath)
-        {
-            Debug.Log(node.position);
-        }
 
         if (newPath != null)
         {
             selectedCar.GetComponent<CarController>().path = newPath;
+            drawPath(newPath);
             return newPath;
         }
         else
@@ -108,6 +98,9 @@ public class CityGrid : MonoBehaviour
 
     public void UpdateTouchPosition(Vector3 touchPosition)
     {
+        start = selectedCar.GetComponent<CarController>().moveTo;
+        if (start == null)
+            start = GetClosestNode(selectedCar.transform.position);
         Node newEnd = GetClosestNode(touchPosition);
 
         if (newEnd != end)
@@ -130,7 +123,9 @@ public class CityGrid : MonoBehaviour
                 gridNodes[x, z] = newNode;
 
                 if (Random.Range(0f, 1f) > 0.9f)
+                {
                     newNode.isOpen = false;
+                }
                 //if we're on top of a building
                 if(x % 2 == 1 && z % 2 == 1) 
                 {
@@ -183,11 +178,11 @@ public class CityGrid : MonoBehaviour
 
     void GenerateStructures()
     {
-        if(roadHolder != null)
+        if(structureHolder != null)
         {
-            DestroyImmediate(roadHolder);
+            DestroyImmediate(structureHolder);
         }
-        roadHolder = new GameObject("RoadHolder");
+        structureHolder = new GameObject("structureHolder");
         foreach (Node node in gridNodes)
         {
             GenerateStructure(node);
@@ -196,8 +191,6 @@ public class CityGrid : MonoBehaviour
 
     void GenerateStructure(Node node)
     {
-        
-
         int numOfNeighbours = 0;
         List<Directions> closedDirections = new List<Directions>();
         bool[] OpenDirections = { true, true, true, true };
@@ -225,10 +218,22 @@ public class CityGrid : MonoBehaviour
             case 2:
                 //Insert Line Road or L road
                 if (OpenDirections[(int)Directions.up] && OpenDirections[(int)Directions.down])
+                {
                     CreateStructure(node, roadLine, Quaternion.identity);
+                    if (Random.Range(0f, 1f) > 0.5f)
+                    {
+                        CreateInteraction(node);
+                    }
+                }
 
                 else if (OpenDirections[(int)Directions.left] && OpenDirections[(int)Directions.right])
+                {
                     CreateStructure(node, roadLine, Quaternion.Euler(0, 90, 0));
+                    if (Random.Range(0f, 1f) > 0.5f)
+                    {
+                        CreateInteraction(node);
+                    }
+                }
 
                 else
                     CreateCornerRoad(node, OpenDirections);
@@ -251,12 +256,17 @@ public class CityGrid : MonoBehaviour
         }
     }
 
-    void CreateStructure(Node node, GameObject road, Quaternion rotation)
+    void CreateStructure(Node node, GameObject structure, Quaternion rotation)
     {
-        GameObject newRoad = Instantiate(road, node.position, rotation);
-        newRoad.transform.parent = roadHolder.transform;
-        newRoad.transform.localScale = roadScale;
-        node.structure = newRoad;
+        GameObject newStructure = Instantiate(structure, node.position, rotation);
+        newStructure.transform.parent = structureHolder.transform;
+        newStructure.transform.localScale = roadScale;
+        node.structure = newStructure;
+
+        if (!node.isOpen)
+        {
+            Instantiate(blockade, newStructure.transform);
+        }
     }
 
     void CreateCornerRoad(Node node,bool[] openDirections)
@@ -279,6 +289,14 @@ public class CityGrid : MonoBehaviour
         }
     }
 
+    void CreateInteraction(Node node)
+    {
+        GameObject newIcon = Instantiate(nodeIcon, nodeInteractionHolder.transform);
+        newIcon.transform.position = new Vector3(node.position.x, 5.2f, node.position.z);
+        node.interaction = newIcon.GetComponent<NodeInteraction>();
+        //node.interaction.parent = node;
+    }
+
     public Node GetClosestNode(Vector3 position)
     {
         position /= distanceBetweenNodes;
@@ -290,7 +308,7 @@ public class CityGrid : MonoBehaviour
 
         if(!gridNodes[x, z].snapToGrid)
         {
-            Debug.Log(x + " " + z);
+            //Debug.Log(x + " " + z);
             //Distance to an existing node
             float xDistance = 0.5f - position.x % 1;
             float zDistance = 0.5f - position.z % 1;
@@ -312,6 +330,13 @@ public class CityGrid : MonoBehaviour
         }
 
         return gridNodes[x, z];
+    }
+
+    void drawPath(List<Node> newPath)
+    {
+        List<Vector3> positions = newPath.ConvertAll<Vector3>(node => new Vector3(node.position.x, 1, node.position.z));
+        lineRenderer.positionCount = positions.Count;
+        lineRenderer.SetPositions(positions.ToArray());
     }
 
     private void OnDrawGizmos()
@@ -359,7 +384,7 @@ public class CityGrid : MonoBehaviour
             {
                 Gizmos.color = Color.red;
                 //Debug.Log("Drawing Path");
-                Gizmos.DrawLine((Vector3)GetClosestNode(startPos.position).position + vOffset, (Vector3)path[0].position + vOffset);
+                Gizmos.DrawLine((Vector3)selectedCar.transform.position + vOffset, (Vector3)path[0].position + vOffset);
             }
 
             for (int i = 0; i < path.Count - 1; i++)

@@ -12,6 +12,7 @@ public enum Directions
 
 public class Node
 {
+    public NodeInteraction interaction;
     public GameObject structure;
 
     public Vector3 position;
@@ -39,6 +40,15 @@ public class Node
     public void SetNeighbour(Directions direction, Node node)
     {
         neighbours[(int)direction] = node;
+    }
+
+    public void Interact()
+    {
+        Debug.Log("Interacting with node: " + position);
+        if(interaction != null)
+        {
+            interaction.TriggerInteraction();
+        }
     }
 
     public bool Equals(Node other)
