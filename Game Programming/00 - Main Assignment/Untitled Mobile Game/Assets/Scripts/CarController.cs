@@ -73,6 +73,14 @@ public class CarController : MonoBehaviour
         if (path.Count != 0)
         {
             moveTo = path[0];
+
+            if (!moveTo.isOpen)
+            {
+                path = cityGrid.GetPath(moveFrom, path[path.Count - 1]);
+                GetNewDestination();
+                return;
+            }
+
             move = moveTo.position - moveFrom.position;
             Debug.Log("Moving towards: " + moveTo.position);
 

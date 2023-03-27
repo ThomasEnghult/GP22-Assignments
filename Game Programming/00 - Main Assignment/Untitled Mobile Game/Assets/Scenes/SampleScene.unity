@@ -10747,6 +10747,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: blockade
       objectReference: {fileID: 0}
+    - target: {fileID: 2580670106229157590, guid: d62738715272bf14db3f6033d766f8c2, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: d62738715272bf14db3f6033d766f8c2, type: 3}
 --- !u!1001 &6962174814309323119

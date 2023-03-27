@@ -47,8 +47,13 @@ public class CityGrid : MonoBehaviour
 
     private LineRenderer lineRenderer;
 
+    public string loadSeed = "";
+    public string saveSeed = "";
+
     void Start()
     {
+        loadSeed = "";
+
         lineRenderer = GetComponentInChildren<LineRenderer>();
         nodeInteractionHolder = new GameObject();
         nodeInteractionHolder.name = "NodeInteractionHolder";
@@ -63,6 +68,9 @@ public class CityGrid : MonoBehaviour
         //GenerateStructures();
         //mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
         //end = GetClosestNode(mousePos);
+
+        
+        
     }
 
     void Update()
@@ -178,6 +186,7 @@ public class CityGrid : MonoBehaviour
 
     void GenerateStructures()
     {
+        Debug.Log("LoadSeed: " + loadSeed);
         if(structureHolder != null)
         {
             DestroyImmediate(structureHolder);
@@ -187,6 +196,8 @@ public class CityGrid : MonoBehaviour
         {
             GenerateStructure(node);
         }
+
+        Debug.Log("SaveSeed: " + saveSeed);
     }
 
     void GenerateStructure(Node node)
@@ -211,8 +222,18 @@ public class CityGrid : MonoBehaviour
         {
             case 0:
                 //Insert City Block
-                int rotation = Random.Range(0, 5) * 90;
-                CreateStructure(node, cityBlock, Quaternion.Euler(0, rotation, 0));
+                int rotation;
+                if (loadSeed.Length > 0)
+                {
+                    rotation = loadSeed[0];
+                    loadSeed = loadSeed[1..];
+                }
+                else
+                {
+                    rotation = Random.Range(0, 5);
+                }
+                saveSeed += rotation;
+                CreateStructure(node, cityBlock, Quaternion.Euler(0, rotation * 90, 0));
 
                 break;
             case 2:
