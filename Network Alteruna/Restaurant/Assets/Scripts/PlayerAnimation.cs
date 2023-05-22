@@ -81,6 +81,4 @@ public class PlayerAnimation : AttributesSync
     {
         this.isHolding = isHolding;
     }
-
-
 }

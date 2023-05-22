@@ -2,31 +2,15 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Alteruna;
 
-public class PlayerPickup : MonoBehaviour
+public class PlayerPickup : AttributesSync
 {
     GameObject holdingItem;
-    public bool isHolding = false;
+    [SynchronizableField] public bool isHolding = false;
 
-    GameObject closestItem;
-    private float closestDistance = -1;
     [SerializeField] private Transform itemRoot;
-
-    private void Awake()
-    {
-
-    }
-
-    void Start()
-    {
-
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
+    [SerializeField] private float pickupRadius = 2;
 
     public void ReleaseItem()
     {
@@ -35,42 +19,49 @@ public class PlayerPickup : MonoBehaviour
 
     public bool GrabItem()
     {
+        GameObject closestItem = CheckForClosestItem();
+
         if(closestItem == null)
         {
             Debug.Log("No item nearby to grab");
             return false;
         }
-
-        holdingItem = closestItem;
-        closestItem.transform.parent = itemRoot;
-        closestItem.transform.localPosition = Vector3.zero;
-        //closestItem.transform.localRotation = Quaternion.identity;
-
         isHolding = true;
-        closestDistance = -1;
+
+        InvokeRemoteMethod(nameof(AttachItemToRoot), UserId.AllInclusive, closestItem.transform);
 
         return true;
     }
 
-    private void AttachItemToRoot(GameObject item)
+    private GameObject CheckForClosestItem()
     {
+        float closestDistance = -1;
+        GameObject closestItem = null;
+
+        var itemsInRange = Physics.OverlapSphere(transform.position, pickupRadius, ~0, QueryTriggerInteraction.Collide);
+        foreach(var item in itemsInRange)
+        {
+            if (item.CompareTag("Pickup"))
+            {
+                float distance = Vector3.Distance(transform.position, item.transform.position);
+
+                if (closestDistance == -1 || distance < closestDistance)
+                {
+                    closestDistance = distance;
+                    closestItem = item.gameObject;
+                }
+            }
+        }
+
+        return closestItem;
 
     }
 
-    private void OnTriggerStay(Collider other)
+    [SynchronizableMethod]
+    private void AttachItemToRoot(Transform item)
     {
-        if (!isHolding && other.CompareTag("Pickup"))
-        {
-            float distance = Vector3.Distance(transform.position, other.transform.position);
-
-            if (closestDistance == -1)
-                closestDistance = distance;
-            else if (distance < closestDistance)
-            {
-                closestDistance = distance;
-                closestItem = other.gameObject;
-            }
-
-        }
+        item.parent = itemRoot;
+        item.localPosition = Vector3.zero;
+        item.localRotation = Quaternion.identity;
     }
 }
