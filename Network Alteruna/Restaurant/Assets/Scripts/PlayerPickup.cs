@@ -19,7 +19,7 @@ public class PlayerPickup : AttributesSync
 
     public bool GrabItem()
     {
-        GameObject closestItem = CheckForClosestItem();
+        GameObject closestItem = CheckForClosestItem(transform.position, pickupRadius);
 
         if(closestItem == null)
         {
@@ -28,22 +28,28 @@ public class PlayerPickup : AttributesSync
         }
         isHolding = true;
 
-        InvokeRemoteMethod(nameof(AttachItemToRoot), UserId.AllInclusive, closestItem.transform);
+        AttachItemToRoot(closestItem.transform);
+
+        InvokeRemoteMethod(nameof(RemoteGrabItem), UserId.All, transform.position, pickupRadius);
 
         return true;
     }
 
     private GameObject CheckForClosestItem()
     {
+        return CheckForClosestItem(transform.position, pickupRadius);
+    }
+    private GameObject CheckForClosestItem(Vector3 position, float pickupRadius)
+    {
         float closestDistance = -1;
         GameObject closestItem = null;
 
-        var itemsInRange = Physics.OverlapSphere(transform.position, pickupRadius, ~0, QueryTriggerInteraction.Collide);
+        var itemsInRange = Physics.OverlapSphere(position, pickupRadius, ~0, QueryTriggerInteraction.Collide);
         foreach(var item in itemsInRange)
         {
             if (item.CompareTag("Pickup"))
             {
-                float distance = Vector3.Distance(transform.position, item.transform.position);
+                float distance = Vector3.Distance(position, item.transform.position);
 
                 if (closestDistance == -1 || distance < closestDistance)
                 {
@@ -58,6 +64,13 @@ public class PlayerPickup : AttributesSync
     }
 
     [SynchronizableMethod]
+    public void RemoteGrabItem(Vector3 position, float pickupRadius)
+    {
+        isHolding = true;
+        GameObject closestItem = CheckForClosestItem(position, pickupRadius);
+        AttachItemToRoot(closestItem.transform);
+    }
+
     private void AttachItemToRoot(Transform item)
     {
         item.parent = itemRoot;
