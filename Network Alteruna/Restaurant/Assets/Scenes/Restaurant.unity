@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.18028352, g: 0.22571376, b: 0.30692244, a: 1}
+  m_IndirectSpecularColor: {r: 0.18028378, g: 0.22571412, b: 0.30692285, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -218,7 +218,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 6
+  m_RootOrder: 7
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &172563512
 PrefabInstance:
@@ -275,7 +275,7 @@ PrefabInstance:
     - target: {fileID: 8763101913705298803, guid: 5a577542a281e0a448dc3b383023e1f2,
         type: 3}
       propertyPath: m_RootOrder
-      value: 7
+      value: 6
       objectReference: {fileID: 0}
     - target: {fileID: 8763101913705298803, guid: 5a577542a281e0a448dc3b383023e1f2,
         type: 3}
@@ -482,15 +482,15 @@ MonoBehaviour:
   DevClientName: DevClient0
   UseKnownDevDevice: 0
   IsDevClient: 0
-  IsDevServer: 1
+  IsDevServer: 0
   AutoJoinFirstRoom: 0
-  AutoJoinOwnRoom: 1
-  BroadcastEnabled: 0
+  AutoJoinOwnRoom: 0
+  BroadcastEnabled: 1
   DevServerIP: 
   DevPort: 20010
   LANServerPort: 0
   PublishPort: 20000
-  ServerPort: 20010
+  ServerPort: 0
   _username: 
 --- !u!4 &243229684
 Transform:
